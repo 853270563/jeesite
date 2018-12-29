@@ -1,0 +1,132 @@
+
+<!DOCTYPE html >
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>json交互测试</title>
+<script type="text/javascript" src="static/jquery/jquery-1.8.3.js"></script>
+<script type="text/javascript">
+//请求json，输出是json
+function requestJson(){
+	
+	  $.ajax({
+		type:'post',
+		url:'/jeesite/requestJson',
+		 
+		//contentType:'application/octet-stream',//'multipart/form-data',//'application/json;charset=utf-8',
+		//数据格式是json串，商品信息
+		//data:'{name:"手机","price":999}',
+		data:"name=手机&price=999",			//这两个值不等价 报 400 (Bad Request)
+		success:function(data){//返回json结果
+			alert(data);
+		}
+		
+	}); 
+	/*  $.post('/jeesite-master/requestJson','name=手机&price=999',function(data){//返回json结果
+		alert(data.name)});  //报unsupport media type(415)错误
+	; */ 											
+}
+//请求key/value，输出是json
+function responseJson(){
+	
+	 $.ajax({
+		type:'post',
+		url:'/jeesite-master/responseJson2',
+		//请求是key/value这里不需要指定contentType，因为默认就 是key/value类型
+		//contentType:'application/json;charset=utf-8',
+		//数据格式是json串，商品信息
+		// data:"name=手机&price=999", 
+		data:{name:'luanyu',price:1000},	// 这两个值等价 
+		success:function(data){//返回json结果
+			//alert(data.name);
+		console.log(data);
+		},
+		error:function(data,b){
+			
+			console.log(data);
+			console.log(b);
+		}
+		
+	});
+	 // $.post('/jeesite-master/responseJson',[1,2],function(data){//求情参数undefined
+		//	alert(data.name)});  
+	 // $.post('/jeesite-master/responseJson',[{name:"name",value:"luanyu"},{name:"price",value:1000}],function(data){//返回json结果
+			//alert(data.name)});  
+	/*   $.post('/jeesite-master/responseJson',{name:"luanyu",price:1000},function(data){//返回json结果
+			alert(data.name)}); */  
+			
+			// $.post('/jeesite-master/responseJson',"name=手机",function(data){   //返回json结果
+			//alert(data.name)});  												//这三个请求等价      $.post默认的是key/value请求
+	/* $.get('/jeesite-master/responseJson/qwer?',function(data){//返回json结果
+			alert(data.name)});	 */						   //get求情也会自动填充数据				
+	 
+}
+function img(obj) {
+	$(obj).attr('src',"/jeesite-master/responseJson")
+}
+function tijiao() {
+	var formData = new FormData($('#formData')[0]);
+	formData.append('qwer',$(':file')[0].files[0]);//file类型的input没有name属性时，需要手动append 如果没有选择文件 该值为undefined
+	$.ajax({
+		  url: "/jeesite-master/reqFormData",
+		  type: "POST",
+		  data: formData,
+		  contentType: false, //告诉jQuery不要去处理发送的数据
+		  processData: false, //告诉jQuery不要去设置Content-Type请求头
+		 
+		});
+
+}
+function getJson() {
+	
+	
+$.get('/jeesite-master/responseJson3');
+}
+
+</script>
+</head>
+<body>
+ <input type="button" onclick="requestJson()" value="请求json，输出是json"/>
+<input type="button" onclick="responseJson()" value="请求key/value，输出是json"/>
+<!--<form action="/jeesite-master/responseJson" method="post">
+<input name="name" type="hidden">name<br>
+<img  style="width: 100px;height: 100px;" onclick="img(this)">
+<input name="price" ></div>
+<input id="qwe" ></div>没有name 属性的不会提交
+price
+<input type="submit" value="提交">
+</form> -->
+
+
+<!-- <form action="" id='formData'>
+<input type="text" name="name">
+<input type="text" name="age">
+<input type="file" name="moreFile" multiple="multiple">
+<input type="file" name="moreFile2" multiple="multiple">
+<input type="button" value="提交" onclick="tijiao()">
+</form> -->
+<!-- <video src="/jeesite-master/responseJson" controls="controls"></video> -->
+<!-- <input type="button" onclick="getJson()" value="测试json"> -->
+
+
+<script type="text/javascript">
+//sessionStorage.setItem("key",'nihao')
+console.log(sessionStorage.getItem("key"));
+console.log(localStorage.getItem("local"));
+console.log(window.name);
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

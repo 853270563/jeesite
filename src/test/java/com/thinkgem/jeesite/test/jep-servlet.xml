@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p" xmlns:context="http://www.springframework.org/schema/context" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation=" 
+           http://www.springframework.org/schema/beans 
+           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
+           http://www.springframework.org/schema/context 
+           http://www.springframework.org/schema/context/spring-context-3.0.xsd
+           http://www.springframework.org/schema/util 
+           http://www.springframework.org/schema/util/spring-util-3.0.xsd
+           http://www.springframework.org/schema/mvc 
+           http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+           http://www.springframework.org/schema/aop 
+           http://www.springframework.org/schema/aop/spring-aop-3.0.xsd"
+	default-autowire="byName">
+	<!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
+
+	<!-- Enables the Spring MVC @Controller programming model -->
+	<mvc:annotation-driven validator="validator" conversion-service="conversionService" />
+
+	<!-- Handles HTTP GET requests for /resources/** by efficiently serving up static resources in the ${webappRoot}/resources directory -->
+	<mvc:resources mapping="/resource/**" location="/resource/" />
+
+	<mvc:interceptors>
+		<bean class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor">
+			<property name="paramName" value="localeLanguage" />
+		</bean>
+		<bean class="com.pactera.jep.base.web.RiskPrivilegeInterceptor" />
+		<bean class="com.pactera.jep.todo.interceptor.TodoRefreshInterceptor"/>
+	</mvc:interceptors>
+
+	<bean id="orderedPrivilegeStrategy" class="com.pactera.jep.base.utils.OrderedPrivilegeStrategy">
+		<constructor-arg>
+			<value>desc</value>
+		</constructor-arg>
+	</bean>
+
+	<bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping" />
+	<bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+	<!-- <bean class="com.pactera.jep.core.web.annotation.AnnotationMethodHandlerAdapter"> -->
+		<property name="cacheSeconds" value="0" />
+		<property name="messageConverters">
+			<list>
+				<bean class="org.springframework.http.converter.StringHttpMessageConverter">
+					<property name="supportedMediaTypes">
+						<list>
+							<value>text/plain;charset=UTF-8</value>
+						</list>
+					</property>
+				</bean>
+				<bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+					<property name="supportedMediaTypes">
+						<list>
+							<value>application/json;charset=UTF-8</value>
+						</list>
+					</property>
+				</bean>
+			</list>
+		</property>
+	</bean>
+	<bean id="conversionService" class="org.springframework.context.support.ConversionServiceFactoryBean">
+		<property name="converters">
+			<list>
+				<bean class="com.pactera.jep.core.web.converter.CustomDateConverter" />
+			</list>
+		</property>
+	</bean>
+	<bean id="validator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+		<property name="validationMessageSource" ref="messageSource" />
+	</bean>
+	<context:component-scan base-package="com.**.web" use-default-filters="false">
+		<context:include-filter type="annotation" expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+	<!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
+	<!-- 根据客户端的不同的请求决定不同的view进行响应, 如 /user/1.json /user/1.xml -->
+	<bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+		<property name="favorPathExtension" value="true" />
+		<property name="favorParameter" value="true" />
+		<property name="ignoreAcceptHeader" value="true" />
+		<property name="defaultContentType" value="text/html" />
+		<property name="mediaTypes">
+			<map>
+				<entry key="json" value="application/json" />
+				<entry key="xml" value="application/xml" />
+				<entry key="html" value="text/html" />
+			</map>
+		</property>
+		<property name="viewResolvers">
+			<list>
+				<bean class="org.springframework.web.servlet.view.BeanNameViewResolver" />
+				<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+					<property name="viewClass" value="org.springframework.web.servlet.view.JstlView" />
+					<property name="prefix" value="/WEB-INF/views/" />
+					<property name="suffix" value=".jsp"></property>
+				</bean>
+			</list>
+		</property>
+		<property name="defaultViews">
+			<list>
+				<bean class="org.springframework.web.servlet.view.json.MappingJackson2JsonView">
+					<property name="contentType" value="text/html;charset=UTF-8" />
+				</bean>
+				<bean class="org.springframework.web.servlet.view.xml.MarshallingView">
+					<property name="marshaller">
+						<bean class="org.springframework.oxm.xstream.XStreamMarshaller">
+							<property name="autodetectAnnotations" value="true" />
+						</bean>
+					</property>
+				</bean>
+			</list>
+		</property>
+	</bean>
+
+	<bean id="localeChangeInterceptor" class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor" />
+	<bean id="localeResolver" class="org.springframework.web.servlet.i18n.SessionLocaleResolver">
+		<property name="defaultLocale" value="zh_CN" />
+	</bean>
+
+	<!-- Mapping exception to the handler view -->
+	<bean id="exceptionResolver" class="com.pactera.jep.core.exception.CustomSimpleMappingExceptionResolver">
+		<property name="defaultErrorView" value="exception/error"></property><!-- 定义默认的异常处理页面，当该异常类型的注册时使用 -->
+		<property name="exceptionAttribute" value="ex"></property><!-- 定义异常处理页面用来获取异常信息的变量名，默认名为exception -->
+		<property name="exceptionMappings"><!-- 定义需要特殊处理的异常，用类名或完全路径名作为key，异常页面名作为值 -->
+			<props>
+				<prop key="java.lang.Exception">exception/error</prop>
+				<prop key="com.pactera.jep.core.exception.ServiceException">exception/serviceException</prop>
+				<prop key="org.springframework.web.multipart.MaxUploadSizeExceededException">exception/maxUploadExceed</prop>
+			</props>
+		</property>
+	</bean>
+
+	<!-- 对Controller切面，需要特殊处理，因为@Controller的组件被Spring容器代理过了，所以要切代理过的org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter.handle(..) -->
+	<aop:config>
+		<aop:pointcut id="xController" expression="execution(* org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter.handle(..))" />
+		<aop:advisor pointcut-ref="xController" advice-ref="customExceptionHandler" />
+		<!-- 
+		<aop:advisor pointcut-ref="xController" advice-ref="customLogHandler" />
+		 -->
+	</aop:config>
+	 
+</beans>
